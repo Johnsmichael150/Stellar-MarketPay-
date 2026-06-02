@@ -156,6 +156,10 @@ export default function InsightsPage() {
 
   if (loading) {
     return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-ink-900">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b dark:border-market-500/10-2 border-blue-500" />
+          <p className="mt-4 text-gray-600 dark:text-amber-700">Loading market insights...</p>
       <div className="min-h-screen bg-ink-900 bg-noise px-4 py-16">
         <div className="mx-auto max-w-6xl animate-pulse space-y-6">
           <div className="h-10 w-72 rounded-xl bg-ink-700" />
@@ -172,10 +176,8 @@ export default function InsightsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-ink-900 bg-noise flex items-center justify-center px-4">
-        <div className="card max-w-md text-center">
-          <p className="text-red-400">{error}</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-ink-900">
+        <p className="text-red-500">{error}</p>
       </div>
     );
   }
@@ -190,149 +192,68 @@ export default function InsightsPage() {
         />
       </Head>
 
-      <div className="min-h-screen bg-ink-900 bg-noise">
-        <div className="bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.16),_transparent_35%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.14),_transparent_30%),linear-gradient(180deg,_rgba(12,10,6,0.96),_rgba(12,10,6,1))]">
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="font-mono text-xs uppercase tracking-[0.35em] text-market-400/80">
-                  Daily cached market intelligence
-                </p>
-                <h1 className="mt-3 font-display text-4xl font-bold text-amber-100 sm:text-5xl">
-                  Market Insights
-                </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-6 text-amber-800 sm:text-base">
-                  Track which categories are growing, which skills are in demand, and where freelancers face the least competition.
-                </p>
-              </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-ink-900 py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-amber-100 mb-1">Market Insights</h1>
+          <p className="text-gray-500 dark:text-amber-700 mb-8">Live analytics across all job categories on Stellar MarketPay</p>
 
-              <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[30rem]">
-                <MetricCard
-                  label="Categories"
-                  value={String(categories.length)}
-                  note="Sorted by job volume and budget"
-                />
-                <MetricCard
-                  label="Skills"
-                  value={String(skills.length)}
-                  note="Top tags from active listings"
-                />
-                <MetricCard
-                  label="Opportunities"
-                  value={String(competitiveJobs.length)}
-                  note="Jobs with fewer than 5 applications"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                label="Average Budget"
-                value={categories.length > 0 ? formatBudget(categories[0].avgBudget) : "0.00 XLM"}
-                note="Highest-volume category leader"
-              />
-              <MetricCard
-                label="Avg Applications"
-                value={categories.length > 0 ? categories[0].avgApplicationsPerJob.toFixed(1) : "0.0"}
-                note="Per job in the leading category"
-              />
-              <MetricCard
-                label="Acceptance Rate"
-                value={categories.length > 0 ? `${categories[0].acceptanceRate.toFixed(1)}%` : "0.0%"}
-                note="Accepted applications as a share of total applications"
-              />
-              <MetricCard
-                label="Client Mix"
-                value={clientMix ? `${clientMix.newClients} / ${clientMix.returningClients}` : "0 / 0"}
-                note="New clients vs returning clients"
-              />
-            </div>
-
-            <div className="mt-8 grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-              <section className="card">
-                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <h2 className="section-title">Category performance</h2>
-                    <p className="mt-2 text-sm text-amber-800">
-                      Sort by job volume, budget, application pressure, or competition.
-                    </p>
-                  </div>
+          {/* Overview cards */}
+          {overview && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+              {[
+                { label: "Total Jobs", value: overview.totalJobs.toLocaleString() },
+                { label: "Open Now", value: overview.openJobs.toLocaleString() },
+                { label: "Avg Budget", value: `${overview.avgBudgetXLM} XLM` },
+                { label: "Avg Days to Fill", value: overview.avgDaysToFill != null ? `${overview.avgDaysToFill}d` : "—" },
+              ].map((card) => (
+                <div key={card.label} className="bg-white dark:bg-ink-800 rounded-lg shadow p-5">
+                  <p className="text-xs text-gray-500 dark:text-amber-700 mb-1">{card.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-amber-100">{card.value}</p>
                 </div>
+              ))}
+            </div>
 
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="border-b border-[rgba(251,191,36,0.08)] text-[11px] uppercase tracking-[0.25em] text-amber-800">
-                      <tr>
-                        <th className="pb-3 pr-4 text-left text-amber-800">Category</th>
-                        <th className="pb-3 pr-4 text-right">
-                          <SortButton
-                            label="Jobs"
-                            active={sortKey === "totalJobs"}
-                            direction={sortDirection}
-                            onClick={() => {
-                              setSortKey("totalJobs");
-                              setSortDirection((current) =>
-                                sortKey === "totalJobs" ? (current === "asc" ? "desc" : "asc") : "desc",
-                              );
-                            }}
-                          />
-                        </th>
-                        <th className="pb-3 pr-4 text-right">
-                          <SortButton
-                            label="Avg Budget"
-                            active={sortKey === "avgBudget"}
-                            direction={sortDirection}
-                            onClick={() => {
-                              setSortKey("avgBudget");
-                              setSortDirection((current) =>
-                                sortKey === "avgBudget" ? (current === "asc" ? "desc" : "asc") : "desc",
-                              );
-                            }}
-                          />
-                        </th>
-                        <th className="pb-3 pr-4 text-right">
-                          <SortButton
-                            label="Apps / Job"
-                            active={sortKey === "avgApplicationsPerJob"}
-                            direction={sortDirection}
-                            onClick={() => {
-                              setSortKey("avgApplicationsPerJob");
-                              setSortDirection((current) =>
-                                sortKey === "avgApplicationsPerJob"
-                                  ? (current === "asc" ? "desc" : "asc")
-                                  : "desc",
-                              );
-                            }}
-                          />
-                        </th>
-                        <th className="pb-3 pr-4 text-right">
-                          <SortButton
-                            label="Acceptance"
-                            active={sortKey === "acceptanceRate"}
-                            direction={sortDirection}
-                            onClick={() => {
-                              setSortKey("acceptanceRate");
-                              setSortDirection((current) =>
-                                sortKey === "acceptanceRate" ? (current === "asc" ? "desc" : "asc") : "desc",
-                              );
-                            }}
-                          />
-                        </th>
-                        <th className="pb-3 text-right">
-                          <SortButton
-                            label="Low Competition"
-                            active={sortKey === "lowCompetitionJobs"}
-                            direction={sortDirection}
-                            onClick={() => {
-                              setSortKey("lowCompetitionJobs");
-                              setSortDirection((current) =>
-                                sortKey === "lowCompetitionJobs"
-                                  ? (current === "asc" ? "desc" : "asc")
-                                  : "desc",
-                              );
-                            }}
-                          />
-                        </th>
+          {/* Category table */}
+          {categories.length === 0 ? (
+            <div className="bg-white dark:bg-ink-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-amber-700">
+              No category data available yet.
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-ink-800 rounded-lg shadow overflow-hidden mb-10">
+              <div className="px-6 py-4 border-b dark:border-market-500/10">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-amber-100">Stats by Category</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-ink-700 dark:bg-ink-900">
+                    <tr>
+                      <th className="text-left py-3 px-6 text-gray-600 dark:text-amber-700 font-medium">Category</th>
+                      <th className="text-right py-3 px-6 text-gray-600 dark:text-amber-700 font-medium">Jobs</th>
+                      <th className="text-right py-3 px-6 text-gray-600 dark:text-amber-700 font-medium">Avg Budget (XLM)</th>
+                      <th className="text-right py-3 px-6 text-gray-600 dark:text-amber-700 font-medium">Filled</th>
+                      <th className="text-right py-3 px-6 text-gray-600 dark:text-amber-700 font-medium">Avg Days to Fill</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map((cat) => (
+                      <tr key={cat.category} className="border-t dark:border-market-500/10 hover:bg-gray-50 dark:hover:bg-ink-700 dark:bg-ink-900">
+                        <td className="py-3 px-6 text-gray-900 dark:text-amber-100 font-medium">{cat.category}</td>
+                        <td className="py-3 px-6 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            <div className="w-24 bg-gray-200 dark:bg-ink-700 rounded-full h-1.5 hidden sm:block">
+                              <div
+                                className="bg-blue-500 h-1.5 rounded-full"
+                                style={{ width: `${(cat.jobCount / maxJobs) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-gray-900 dark:text-amber-100">{cat.jobCount}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-6 text-right text-gray-900 dark:text-amber-100">{cat.avgBudgetXLM}</td>
+                        <td className="py-3 px-6 text-right text-gray-900 dark:text-amber-100">{cat.filledCount}</td>
+                        <td className="py-3 px-6 text-right text-gray-500 dark:text-amber-700">
+                          {cat.avgDaysToFill != null ? `${cat.avgDaysToFill}d` : "—"}
+                        </td>
                       </tr>
                     </thead>
                     <tbody>

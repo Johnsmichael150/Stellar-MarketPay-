@@ -138,10 +138,39 @@ export interface UserProfile {
   ratingCount?: number;
   referralCount?: number;
   reputationPoints?: number;
+  reputationScore?: number;
+  reputationMetrics?: {
+    avgAcceptHours: number;
+    avgReleaseHours: number;
+  };
   didHash?: string;
   isKycVerified?: boolean;
   createdAt: string;
   updatedAt?: string;
+  blockedAddresses?: string[];
+}
+
+export interface SkillEndorsement {
+  skill: string;
+  count: number;
+  endorsers: string[];
+}
+
+export interface SkillBadge {
+  skill: string;
+  score: number;
+  passed: boolean;
+  taken_at: string;
+}
+
+export interface ProfileStats {
+  totalApplications: number;
+  acceptedApplications: number;
+  successRate: number;
+}
+
+export interface ResponseTime {
+  averageDays: number | null;
 }
 
 export interface Rating {
@@ -221,6 +250,21 @@ export interface PortfolioFile {
   mimeType: string;
   size: number;
   uploadedAt: string;
+}
+
+export interface JobAnalytics {
+  applicationsPerDay: { day: string; count: number }[];
+  averageBidAmount: { currency: string; avgBid: number; count: number }[];
+  applicationStatusCounts: { pending?: number; accepted?: number; rejected?: number; [key: string]: number | undefined };
+  skillDistribution: Record<string, number>;
+  daysToHire: number | null;
+  timeToHire?: number | null;
+}
+
+export interface AssessmentQuestion {
+  id: number;
+  question: string;
+  options: string[];
 }
 
 export interface TokenInfo {

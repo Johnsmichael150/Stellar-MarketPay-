@@ -1,6 +1,7 @@
 import {
   Networks,
   TransactionBuilder,
+  Transaction,
   BASE_FEE,
   Contract,
   Address,
@@ -169,7 +170,14 @@ export async function signAndSubmitEscrowTx(
     network: "TESTNET",
     networkPassphrase: NETWORK_PASSPHRASE,
   });
-  const signedTransaction = typeof signResult === "string" ? signResult : (signResult as any).signedTransaction;
+  const signedTransaction =
+    typeof signResult === "object" && signResult !== null && "signedTransaction" in signResult
+      ? (signResult as unknown as { signedTransaction: string }).signedTransaction
+      : signResult as unknown as string;
+
+  const server = new SorobanRpc.Server(SOROBAN_RPC_URL, {
+    allowHttp: false,
+  });
 
   // Submit the signed transaction
   const sendResponse = await sorobanServer.sendTransaction(

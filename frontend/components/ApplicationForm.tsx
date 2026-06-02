@@ -98,9 +98,7 @@ export default function ApplicationForm({ job, publicKey, biddingPhase = "commit
         freelancerAddress: publicKey,
         proposal: proposal.trim(),
         bidAmount: parseFloat(bidAmount).toFixed(7),
-        currency: job.currency,
-        bidCommitment,
-        bidNonce: revealNonce,
+        currency: job.currency || "XLM",
         screeningAnswers: job.screeningQuestions && job.screeningQuestions.length > 0 ? screeningAnswers : undefined,
         referredBy: referredBy || undefined,
       });

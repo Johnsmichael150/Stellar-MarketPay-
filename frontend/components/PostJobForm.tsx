@@ -380,21 +380,32 @@ export default function PostJobForm({
   // ── success state ──────────────────────────────────────────────────────────
   if (step === "complete") {
     return (
-      <div className="card max-w-lg mx-auto text-center space-y-4 py-8">
+      <div className="max-w-lg mx-auto bg-white dark:bg-ink-800 rounded-2xl shadow-lg dark:shadow-none dark:border dark:border-market-500/10 p-8 text-center space-y-4">
         <ProgressBar step="complete" />
-        <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
-          <span className="text-emerald-400 text-2xl">✓</span>
+
+        <div className="flex flex-col items-center gap-3 pt-2">
+          <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
+            <svg className="w-8 h-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-amber-100">Job Posted!</h2>
+          <p className="text-gray-500 dark:text-amber-700 text-sm">
+            Your budget of{" "}
+            <span className="font-semibold text-indigo-600">
+              {form.budgetXlm} XLM
+            </span>{" "}
+            has been locked in the escrow contract.
+          </p>
         </div>
-        <h2 className="font-display text-2xl font-bold text-amber-100">Job Posted!</h2>
-        <p className="text-amber-700 text-sm">
-          Your budget of{" "}
-          <span className="font-semibold text-market-400">{form.budget} {form.currency}</span>{" "}
-          has been locked in the escrow contract.
-        </p>
-        {txHash && (
-          <div className="bg-ink-800 rounded-xl p-4 text-left space-y-1 border border-market-500/15">
-            <p className="text-xs text-amber-700 uppercase tracking-wide font-semibold">
-              Transaction Hash
+
+        {stepState.txHash && (
+          <div className="bg-gray-50 dark:bg-ink-700 rounded-xl p-4 text-left space-y-1">
+            <p className="text-xs font-semibold text-gray-500 dark:text-amber-700 uppercase tracking-wider">
+              Contract Transaction Hash
+            </p>
+            <p className="text-xs font-mono text-gray-800 dark:text-amber-200 break-all">
+              {stepState.txHash}
             </p>
             <p className="text-xs font-mono text-amber-300 break-all">{txHash}</p>
             {!isMockMode && (
@@ -423,37 +434,73 @@ export default function PostJobForm({
 
   // ── main form ──────────────────────────────────────────────────────────────
   return (
-    <>
-      <div className="card max-w-2xl mx-auto">
-        <h1 className="font-display text-2xl font-bold text-amber-100 mb-1">Post a Job</h1>
-        <p className="text-amber-800 text-sm mb-5">
-          Your XLM budget will be locked in a Soroban escrow contract.
-          {isMockMode && (
-            <span className="ml-2 text-xs text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-              Mock mode — no real XLM charged
-            </span>
+    <div className="max-w-lg mx-auto bg-white dark:bg-ink-800 rounded-2xl shadow-lg dark:shadow-none dark:border dark:border-market-500/10 p-8">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-amber-100 dark:text-amber-100 mb-1">Post a Job</h1>
+      <p className="text-gray-500 dark:text-amber-700 text-sm mb-6">
+        Your XLM budget will be locked in a Soroban escrow contract on-chain.
+      </p>
+
+      {/* 3-step progress (shown while submitting) */}
+      {isInProgress && <ProgressBar step={stepState.current} />}
+
+      {/* Error banner */}
+      {stepState.current === "error" && (
+        <div className="mb-5 rounded-xl bg-red-50 border border-red-200 p-4 space-y-1">
+          <ProgressBar step={stepState.current} />
+          <p className="text-sm font-semibold text-red-700">
+            Something went wrong
+          </p>
+          <p className="text-xs text-red-600">{stepState.errorMessage}</p>
+          {stepState.jobId && (
+            <p className="text-xs text-red-500">
+              The job record has been rolled back. Please try again.
+            </p>
           )}
         </p>
 
-        {isInProgress && <ProgressBar step={step} />}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-amber-300 mb-1">
+            Job Title
+          </label>
+          <input
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            required
+            disabled={isInProgress}
+            placeholder="e.g. Build a Soroban DEX interface"
+            className="w-full rounded-xl border border-gray-200 dark:border-market-500/20 bg-gray-50 dark:bg-ink-700 px-4 py-2.5 text-sm text-gray-900 dark:text-amber-100 placeholder-gray-400 dark:placeholder-amber-900/50 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-market-500/40 focus:border-transparent disabled:opacity-60"
+          />
+        </div>
 
-        {step === "error" && (
-          <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/20 p-4 space-y-1">
-            <p className="text-sm font-semibold text-red-400">Something went wrong</p>
-            <p className="text-xs text-red-300">{errorMsg}</p>
-            <button
-              onClick={() => { setStep("idle"); setErrorMsg(null); }}
-              className="mt-1 text-xs text-red-400 underline"
-            >
-              Dismiss and retry
-            </button>
-          </div>
-        )}
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-amber-300 mb-1">
+            Description
+          </label>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            required
+            rows={4}
+            disabled={isInProgress}
+            placeholder="Describe the work, deliverables, and any context..."
+            className="w-full rounded-xl border border-gray-200 dark:border-market-500/20 bg-gray-50 dark:bg-ink-700 px-4 py-2.5 text-sm text-gray-900 dark:text-amber-100 placeholder-gray-400 dark:placeholder-amber-900/50 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-market-500/40 focus:border-transparent disabled:opacity-60 resize-none"
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
-          <div>
-            <label htmlFor="job-title" className="label">Job Title</label>
+        {/* Budget */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-amber-300 mb-1">
+            Budget (XLM)
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-indigo-500">
+              XLM
+            </span>
             <input
               id="job-title"
               name="title"
@@ -462,180 +509,56 @@ export default function PostJobForm({
               required
               minLength={10}
               disabled={isInProgress}
-              placeholder="e.g. Build a Soroban escrow contract for NFT marketplace"
-              className="input-field"
+              className="w-full rounded-xl border border-gray-200 dark:border-market-500/20 bg-gray-50 dark:bg-ink-700 pl-14 pr-4 py-2.5 text-sm text-gray-900 dark:text-amber-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-market-500/40 focus:border-transparent disabled:opacity-60"
             />
             {touched.title && fieldErrors.title && (
               <p className="text-red-400 text-xs mt-1">{fieldErrors.title}</p>
             )}
           </div>
+          <p className="mt-1 text-xs text-gray-400 dark:text-amber-800">
+            This exact amount will be deducted from your wallet and held in escrow.
+          </p>
+        </div>
 
-          {/* Description */}
-          <div>
-            <label htmlFor="job-description" className="label">Description</label>
-            <textarea
-              id="job-description"
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              required
-              minLength={30}
-              rows={4}
-              disabled={isInProgress}
-              placeholder="Describe the work in detail — requirements, deliverables, acceptance criteria..."
-              className="textarea-field"
-            />
-            {touched.description && fieldErrors.description && (
-              <p className="text-red-400 text-xs mt-1">{fieldErrors.description}</p>
-            )}
-          </div>
+        {/* Skills */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-amber-300 mb-1">
+            Required Skills
+          </label>
+          <input
+            name="skills"
+            value={form.skills}
+            onChange={handleChange}
+            disabled={isInProgress}
+            placeholder="Rust, Soroban, TypeScript (comma-separated)"
+            className="w-full rounded-xl border border-gray-200 dark:border-market-500/20 bg-gray-50 dark:bg-ink-700 px-4 py-2.5 text-sm text-gray-900 dark:text-amber-100 placeholder-gray-400 dark:placeholder-amber-900/50 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-market-500/40 focus:border-transparent disabled:opacity-60"
+          />
+        </div>
 
-          {/* Budget + Currency */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Budget</label>
-              <input
-                name="budget"
-                type="number"
-                min="1"
-                step="0.01"
-                value={form.budget}
-                onChange={handleChange}
-                required
-                disabled={isInProgress}
-                className="input-field"
-              />
-            </div>
-            <div>
-              <label className="label">Currency</label>
-              <select
-                name="currency"
-                value={form.currency}
-                onChange={handleChange}
-                disabled={isInProgress}
-                className="input-field"
-              >
-                <option value="XLM">XLM</option>
-                <option value="USDC">USDC</option>
-              </select>
-            </div>
-          </div>
+        {/* Deadline */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-amber-300 mb-1">
+            Deadline
+          </label>
+          <input
+            name="deadline"
+            type="date"
+            value={form.deadline}
+            onChange={handleChange}
+            disabled={isInProgress}
+            className="w-full rounded-xl border border-gray-200 dark:border-market-500/20 bg-gray-50 dark:bg-ink-700 px-4 py-2.5 text-sm text-gray-900 dark:text-amber-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-market-500/40 focus:border-transparent disabled:opacity-60"
+          />
+        </div>
 
 
-          {/* Milestones */}
-          <div className="rounded-xl border border-market-500/15 bg-ink-900/40 p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <label className="label mb-1">Milestones</label>
-                <p className="text-xs text-amber-800">Add up to 10 deliverables. Total must equal the budget.</p>
-              </div>
-              <button type="button" onClick={addMilestone} disabled={isInProgress || form.milestones.length >= 10} className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-50">+ Add</button>
-            </div>
-            {form.milestones.map((milestone, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 items-center">
-                <input value={milestone.description} onChange={(e) => updateMilestone(index, "description", e.target.value)} disabled={isInProgress} placeholder={`Milestone ${index + 1} description`} className="input-field col-span-12 sm:col-span-6" />
-                <input value={milestone.amount} onChange={(e) => updateMilestone(index, "amount", e.target.value)} disabled={isInProgress} type="number" min="0.0000001" step="0.0000001" placeholder="Amount" className="input-field col-span-6 sm:col-span-3" />
-                <div className="col-span-6 sm:col-span-3 flex gap-1 justify-end">
-                  <button type="button" onClick={() => moveMilestone(index, -1)} disabled={index === 0 || isInProgress} className="btn-secondary text-xs px-2 py-2 disabled:opacity-40">↑</button>
-                  <button type="button" onClick={() => moveMilestone(index, 1)} disabled={index === form.milestones.length - 1 || isInProgress} className="btn-secondary text-xs px-2 py-2 disabled:opacity-40">↓</button>
-                  <button type="button" onClick={() => removeMilestone(index)} disabled={form.milestones.length === 1 || isInProgress} className="btn-secondary text-xs px-2 py-2 disabled:opacity-40">Remove</button>
-                </div>
-              </div>
-            ))}
-            <div className="flex justify-between text-xs">
-              <span className={fieldErrors.milestones ? "text-red-400" : "text-amber-700"}>{fieldErrors.milestones || `${form.milestones.length}/10 milestones configured`}</span>
-              <span className={Math.abs(milestoneSum - budgetValue) > 0.000001 ? "text-red-400" : "text-market-400"}>Total: {milestoneSum.toFixed(2)} / {budgetValue.toFixed(2)} {form.currency}</span>
-            </div>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="label">Category</label>
-            <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              disabled={isInProgress}
-              className="input-field"
-            >
-              {VALID_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Skills */}
-          <div>
-            <label className="label">Required Skills</label>
-            <input
-              name="skills"
-              value={form.skills}
-              onChange={handleChange}
-              disabled={isInProgress}
-              placeholder="Rust, Soroban, TypeScript (comma-separated)"
-              className="input-field"
-            />
-          </div>
-
-          {/* Visibility */}
-          <div>
-            <label className="label">Visibility</label>
-            <select
-              name="visibility"
-              value={form.visibility}
-              onChange={handleChange}
-              disabled={isInProgress}
-              className="input-field"
-            >
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-              <option value="invite_only">Invite Only</option>
-            </select>
-          </div>
-
-          {/* Deadline */}
-          <div>
-            <label className="label">Deadline (optional)</label>
-            <input
-              name="deadline"
-              type="date"
-              value={form.deadline}
-              onChange={handleChange}
-              disabled={isInProgress}
-              className="input-field"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isInProgress || !isFormValid}
-            className="btn-primary w-full py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {step === "posting" ? "Creating job…" :
-             step === "fee_modal" ? "Estimating fees…" :
-             step === "signing" ? "Waiting for signature…" :
-             `Post Job & Lock ${form.budget} ${form.currency} Escrow`}
-          </button>
-
-          {isInProgress && (
-            <p className="text-center text-xs text-amber-700">
-              {step === "fee_modal" && "Simulating contract call to estimate fees…"}
-              {step === "signing" && "Please approve the transaction in your Freighter wallet."}
-            </p>
-          )}
-        </form>
-      </div>
-
-      {/* Fee Estimation Modal — shown after job is created, before signing */}
-      {pendingEscrow && (
-        <FeeEstimationModal
-          transaction={pendingEscrow.transaction}
-          functionName="create_escrow"
-          payerPublicKey={publicKey}
-          onConfirm={handleConfirmFee}
-          onCancel={handleCancelFee}
-        />
-      )}
-    </>
+        {isInProgress && (
+          <p className="text-center text-xs text-gray-400 dark:text-amber-800">
+            {stepState.current === "escrow"
+              ? "Please approve the transaction in your Freighter wallet."
+              : "Submitting your job to the platform…"}
+          </p>
+        )}
+      </form>
+    </div>
   );
 }

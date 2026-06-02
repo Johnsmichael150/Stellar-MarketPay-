@@ -566,8 +566,8 @@ export default function Dashboard({ publicKey, onConnect }: DashboardProps) {
              t === "invitations" ? `Invitations${myInvitations.length > 0 ? ` (${myInvitations.length})` : ""}` :
              t === "analytics" ? "Job Analytics" :
              t === "spending" ? "Spending" :
-             t === "send" ? "Send Payment" :
-             t === "templates" ? "Proposal Templates" :
+             t === "send" ? "Send" :
+             t === "templates" ? "Templates" :
              t === "price_alerts" ? "Price Alerts" :
              t === "withdrawals" ? `Withdrawals (${withdrawHistory.length})` :
              t === "saved_searches" ? `Saved Searches${savedSearches.length > 0 ? ` (${savedSearches.length})` : ""}` :

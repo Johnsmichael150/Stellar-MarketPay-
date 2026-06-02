@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import FaucetButton from "@/components/FaucetButton";
+import i18next from "@/lib/i18n";
 import { usePriceContext } from "@/contexts/PriceContext";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -123,14 +124,17 @@ export default function Navbar({ publicKey, onConnect, onDisconnect }: NavbarPro
           <div className="w-8 h-8 rounded-lg bg-market-500/15 border border-market-500/25 flex items-center justify-center group-hover:border-market-500/50 transition-colors">
             <BriefcaseIcon className="w-4 h-4 text-market-400" />
           </div>
-          <span className="font-display font-bold text-amber-100 text-lg tracking-tight">
+          <span className="hidden sm:inline font-display font-bold text-amber-100 text-lg tracking-tight">
             Stellar<span className="text-market-400">MarketPay</span>
+          </span>
+          <span className="sm:hidden font-display font-bold text-amber-100 text-sm tracking-tight">
+            <span className="text-market-400">SMP</span>
           </span>
         </Link>
 
-        {/* Network badge */}
+        {/* Network badge - hidden on mobile */}
         <span className={clsx(
-          "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border flex-shrink-0",
+          "hidden lg:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border flex-shrink-0",
           STELLAR_NETWORK === "mainnet"
             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
             : "bg-amber-500/10 text-amber-400 border-amber-500/20"
@@ -138,12 +142,12 @@ export default function Navbar({ publicKey, onConnect, onDisconnect }: NavbarPro
           {STELLAR_NETWORK === "mainnet" ? "Mainnet" : "Testnet"}
         </span>
 
-        {/* Nav links */}
+        {/* Desktop Nav links */}
         <div className="hidden md:flex items-center gap-1">
           {links.map((l) => (
             <Link key={l.href} href={l.href} locale={false}
               className={clsx(
-                "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 relative",
+                "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 relative min-h-[44px] flex items-center",
                 router.pathname === l.href
                   ? "bg-market-500/12 text-market-300"
                   : "text-amber-700 hover:text-amber-300 hover:bg-market-500/8"
@@ -217,35 +221,105 @@ export default function Navbar({ publicKey, onConnect, onDisconnect }: NavbarPro
           </select>
         </div>
 
-        {/* Wallet */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Wallet - responsive */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           {publicKey ? (
             <>
               <NotificationBell publicKey={publicKey} />
               <button
                 onClick={() => router.push("/dashboard/transactions")}
-                className="flex items-center gap-1.5 address-tag cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex items-center gap-1 sm:gap-1.5 address-tag cursor-pointer hover:opacity-80 transition-opacity text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2 min-h-[44px]"
                 title={t("wallet.balance") as string}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {shortenAddress(publicKey)}
+                <span className="hidden sm:inline">{shortenAddress(publicKey)}</span>
+                <span className="sm:hidden text-[10px]">{shortenAddress(publicKey, 6)}</span>
                 {balanceLoading ? (
                   <span className="text-xs text-amber-800">{t("wallet.loading")}</span>
                 ) : balance ? (
-                  <span className="text-xs font-medium text-market-400">{balance} XLM</span>
+                  <span className="text-xs font-medium text-market-400 hidden sm:inline">{balance}</span>
                 ) : null}
               </button>
-              <button onClick={onDisconnect} className="text-xs text-amber-800 hover:text-amber-500 transition-colors px-2 py-1">
+              <button 
+                onClick={onDisconnect} 
+                className="hidden sm:inline text-xs text-amber-800 hover:text-amber-500 transition-colors px-2 py-1"
+              >
                 {t("nav.disconnect")}
               </button>
             </>
           ) : (
-            <button onClick={onConnect} className="btn-primary text-sm py-2 px-4">
+            <button 
+              onClick={onConnect} 
+              className="btn-primary text-xs sm:text-sm py-2 px-3 sm:px-4 min-h-[44px] flex items-center"
+            >
               {t("nav.connectWallet")}
             </button>
           )}
         </div>
+
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden w-10 h-10 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-market-500/10 transition-colors"
+          aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          <HamburgerIcon className="w-5 h-5 text-amber-300" />
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-[rgba(251,191,36,0.10)] bg-ink-900/95 backdrop-blur-xl">
+          <div className="px-4 py-4 space-y-2">
+            {/* Mobile Nav Links */}
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} locale={false}
+                className={clsx(
+                  "px-3 py-3 rounded-lg text-sm font-medium transition-all duration-150 relative min-h-[44px] flex items-center",
+                  router.pathname === l.href
+                    ? "bg-market-500/12 text-market-300"
+                    : "text-amber-700 hover:text-amber-300 hover:bg-market-500/8"
+                )}
+              >
+                {t(l.labelKey)}
+                {l.href === "/dashboard" && hasNotification && (
+                  <span className="absolute top-3 right-3 w-2 h-2 bg-emerald-400 rounded-full border border-ink-900" />
+                )}
+                {l.href === "/jobs" && hasJobAlertBadge && (
+                  <span className="absolute top-3 right-3 w-2 h-2 bg-market-400 rounded-full border border-ink-900" />
+                )}
+              </Link>
+            ))}
+
+            {/* Mobile Language Switcher */}
+            <div className="flex items-center px-3 py-2">
+              <select
+                value={i18n.language}
+                onChange={(e) => switchLanguage(e.target.value)}
+                className="bg-market-900/40 border border-amber-900/30 rounded px-2 py-2 text-xs text-amber-100 cursor-pointer w-full min-h-[44px]"
+                aria-label={t("language.switch") as string}
+              >
+                <option value="en">{t("language.english")}</option>
+                <option value="es">{t("language.spanish")}</option>
+              </select>
+            </div>
+
+            {/* Mobile Disconnect Button */}
+            {publicKey && (
+              <button 
+                onClick={() => {
+                  onDisconnect();
+                  setMobileMenuOpen(false);
+                }} 
+                className="w-full text-left text-xs text-amber-800 hover:text-amber-500 transition-colors px-3 py-3 rounded-lg hover:bg-market-500/8 min-h-[44px] flex items-center"
+              >
+                {t("nav.disconnect")}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
     </>
   );
@@ -255,6 +329,31 @@ function BriefcaseIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+    </svg>
+  );
+}
+
+function HamburgerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+    </svg>
+  );
+}
+
+function SunIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+      <circle cx="12" cy="12" r="4" />
+      <path strokeLinecap="round" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+}
+
+function MoonIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
     </svg>
   );
 }

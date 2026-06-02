@@ -219,6 +219,8 @@ function rowToProfile(row) {
     completedJobs: row.completed_jobs,
     totalEarnedXLM: row.total_earned_xlm,
     rating: row.rating !== null ? parseFloat(row.rating) : null,
+    referralCount: Number(row.referral_count || 0),
+    reputationPoints: Number(row.reputation_points || 0),
     blockedAddresses: Array.isArray(row.blocked_addresses) ? row.blocked_addresses : [],
     email: row.email || null,
     emailNotificationsEnabled: row.email_notifications_enabled !== null ? row.email_notifications_enabled : null,
@@ -347,7 +349,7 @@ async function upsertProfile({ publicKey, displayName, bio, skills, portfolioIte
   const safeSkills = Array.isArray(skills) ? skills.slice(0, 15) : null;
   const safePortfolioItems = validatePortfolioItems(portfolioItems);
   const safePortfolioFiles = validatePortfolioFiles(portfolioFiles);
-  const safeAvailability = validateAvailability(availability);
+  const safeAvailability = availability === undefined ? null : validateAvailability(availability);
   const safeRole = validateProfileRole(role);
 
   const { rows } = await pool.query(
@@ -416,6 +418,109 @@ async function updateAvailability(publicKey, availability) {
   return rowToProfile(rows[0]);
 }
 
+async function listProfiles({ role, availability, search, limit = 50 } = {}) {
+  const conditions = [];
+  const values = [];
+  let idx = 1;
+
+  if (role) {
+    if (role === "freelancer") {
+      conditions.push(`role IN ($${idx}, $${idx + 1})`);
+      values.push("freelancer", "both");
+      idx += 2;
+    } else if (role === "client") {
+      conditions.push(`role IN ($${idx}, $${idx + 1})`);
+      values.push("client", "both");
+      idx += 2;
+    } else if (VALID_PROFILE_ROLES.includes(role)) {
+      conditions.push(`role = $${idx}`);
+      values.push(role);
+      idx += 1;
+    } else {
+      throw createValidationError("Role must be one of: client, freelancer, both");
+    }
+  }
+
+  if (availability != null) {
+    if (!VALID_AVAILABILITY_STATUSES.includes(availability)) {
+      throw createValidationError("Availability status must be one of: available, busy, unavailable");
+    }
+    conditions.push(`availability->>'status' = $${idx}`);
+    values.push(availability);
+    idx += 1;
+  }
+
+  if (search && typeof search === "string" && search.trim()) {
+    const searchValue = `%${search.trim()}%`;
+    conditions.push(`(display_name ILIKE $${idx} OR bio ILIKE $${idx} OR public_key ILIKE $${idx} OR skills::text ILIKE $${idx})`);
+    values.push(searchValue);
+    idx += 1;
+  }
+
+  const safeLimit = Number.isInteger(limit) ? Math.min(Math.max(limit, 1), 100) : 50;
+  values.push(safeLimit);
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const { rows } = await pool.query(
+    `SELECT * FROM profiles ${whereClause} ORDER BY updated_at DESC LIMIT $${idx}`,
+    values,
+  );
+
+  return rows.map(rowToProfile);
+}
+
+async function getProfileStats(publicKey) {
+  validatePublicKey(publicKey);
+
+  const { rows } = await pool.query(
+    `SELECT
+       COUNT(*)::int AS total_applications,
+       SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END)::int AS accepted_applications
+     FROM applications
+     WHERE freelancer_address = $1`,
+    [publicKey],
+  );
+
+  const totalApplications = Number(rows[0]?.total_applications || 0);
+  const acceptedApplications = Number(rows[0]?.accepted_applications || 0);
+
+  return {
+    totalApplications,
+    acceptedApplications,
+    successRate: totalApplications ? Math.round((acceptedApplications / totalApplications) * 100) : 0,
+  };
+}
+
+async function getResponseTime(publicKey) {
+  validatePublicKey(publicKey);
+
+  const { rows } = await pool.query(
+    `SELECT
+       ROUND(AVG(EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400)::numeric, 1) AS avg_days
+     FROM messages
+     WHERE receiver_address = $1
+       AND read = true`,
+    [publicKey],
+  );
+
+  return {
+    averageDays: rows[0]?.avg_days !== null ? parseFloat(rows[0].avg_days) : null,
+  };
+}
+
+function calculateFreelancerTier(completedJobs, rating) {
+  if (completedJobs >= 30 && rating !== null && rating >= 4.8) {
+    return "Top Talent";
+  }
+  if (completedJobs >= 15 && rating !== null && rating >= 4.5) {
+    return "Expert";
+  }
+  if (completedJobs >= 5 && rating !== null && rating >= 4.0) {
+    return "Rising Star";
+  }
+  return "Newcomer";
+}
+
 async function isBlocked(clientPublicKey, freelancerAddress) {
   validatePublicKey(clientPublicKey);
   validatePublicKey(freelancerAddress);
@@ -448,7 +553,6 @@ async function blockFreelancer(clientPublicKey, freelancerAddress) {
   );
 
   if (!rows.length) {
-    // Already blocked or profile not found; check which
     const profile = await getProfile(clientPublicKey);
     if (profile.blockedAddresses.includes(freelancerAddress)) {
       const e = new Error("Freelancer is already blocked");
@@ -853,7 +957,7 @@ module.exports = {
   getProfile,
   upsertProfile,
   updateAvailability,
-  verifyIdentity,
+  listProfiles,
   getSkillEndorsements,
   endorseSkill,
   getClientSpendingAnalytics,

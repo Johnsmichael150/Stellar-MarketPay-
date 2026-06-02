@@ -1,13 +1,22 @@
 import { Html, Head, Main, NextScript } from "next/document";
 
+// Inline script applied before hydration to prevent flash of wrong theme
+const themeScript = `
+(function(){
+  try {
+    var stored = localStorage.getItem('smp_theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = stored === 'light' ? 'light' : (stored === 'dark' ? 'dark' : (prefersDark ? 'dark' : 'light'));
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+  } catch(e){}
+})();
+`;
+
 export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#6366f1" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
-        <link rel="mask-icon" href="/icon-maskable.png" color="#6366f1" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </Head>
       <body>
         <Main />

@@ -21,22 +21,37 @@ import {
 import "@/styles/globals.css";
 import { ToastProvider } from "@/components/Toast";
 import { PriceProvider } from "@/contexts/PriceContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import ShortcutsModal from "@/components/ShortcutsModal";
 import OfflineBanner from "@/components/OfflineBanner";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import "../lib/i18n";
 
-const REF_STORAGE_KEY = "marketpay_pending_referrer";
-const WALLET_PUBLIC_KEY_STORAGE_KEY = "marketpay_last_public_key";
-
-function loadStoredPublicKey(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(WALLET_PUBLIC_KEY_STORAGE_KEY);
-    return stored && /^G[A-Z0-9]{55}$/.test(stored) ? stored : null;
-  } catch {
-    return null;
-  }
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      className="fixed bottom-6 left-6 z-50 w-11 h-11 rounded-full flex items-center justify-center shadow-lg border transition-colors duration-200 bg-white dark:bg-ink-800 border-gray-200 dark:border-market-500/20 text-gray-600 dark:text-amber-400 hover:border-gray-400 dark:hover:border-market-500/50"
+    >
+      {theme === "dark" ? (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+          <circle cx="12" cy="12" r="4" />
+          <path strokeLinecap="round" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+      )}
+    </button>
+  );
 }
 
 function App({ Component, pageProps }: AppProps) {
@@ -193,67 +208,35 @@ function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <PriceProvider>
+      <ThemeProvider>
         <ToastProvider>
-          <Head>
-            <title>
-              Stellar MarketPay — Decentralised Freelance Marketplace
-            </title>
-            <meta
-              name="description"
-              content="Post jobs, hire freelancers, and pay with XLM — secured by Soroban smart contracts."
-            />
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1"
-            />
-            <link rel="manifest" href="/manifest.json" />
-            <link rel="apple-touch-icon" href="/icon-192x192.png" />
-            <link
-              rel="alternate"
-              type="application/rss+xml"
-              title="Stellar MarketPay — Job Listings (RSS)"
-              href="/api/jobs/feed.rss"
-            />
-            <link
-              rel="alternate"
-              type="application/atom+xml"
-              title="Stellar MarketPay — Job Listings (Atom)"
-              href="/api/jobs/feed.atom"
-            />
-          </Head>
-          <OfflineBanner />
-          <div className="min-h-screen bg-ink-900 bg-lines flex flex-col">
-            <Navbar
-              publicKey={publicKey}
-              onConnect={handleConnect}
-              onDisconnect={() => persistPublicKey(null)}
-            />
-            <main id="main-content" className="flex-1">
-              <Component
-                {...pageProps}
-                publicKey={publicKey}
-                onConnect={handleConnect}
+          <PriceProvider>
+            <Head>
+              <title>Stellar MarketPay — Decentralised Freelance Marketplace</title>
+              <meta name="description" content="Post jobs, hire freelancers, and pay with XLM — secured by Soroban smart contracts." />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <link rel="manifest" href="/manifest.json" />
+              <link rel="apple-touch-icon" href="/icon-192x192.png" />
+              <link rel="alternate" type="application/rss+xml" title="Stellar MarketPay — Job Listings (RSS)" href="/api/jobs/feed.rss" />
+              <link rel="alternate" type="application/atom+xml" title="Stellar MarketPay — Job Listings (Atom)" href="/api/jobs/feed.atom" />
+            </Head>
+            <OfflineBanner />
+            <div className="min-h-screen bg-lines" style={{ backgroundColor: "var(--bg)" }}>
+              <Navbar publicKey={publicKey} onConnect={handleConnect} onDisconnect={() => setPublicKey(null)} />
+              <main>
+                <Component {...pageProps} publicKey={publicKey} onConnect={handleConnect} />
+              </main>
+              {publicKey && <FaucetButton publicKey={publicKey} />}
+              <ThemeToggle />
+              <ShortcutsModal
+                isOpen={shortcutsModalOpen}
+                onClose={() => setShortcutsModalOpen(false)}
+                showJobDetailShortcuts={isJobDetailPage}
               />
-            </main>
-            <AppFooter onOpenShortcuts={handleOpenShortcutsModal} />
-            {publicKey && <FaucetButton publicKey={publicKey} />}
-            {deferredInstallPrompt && !installDismissed && (
-              <button
-                onClick={handleInstallApp}
-                className="fixed right-4 bottom-4 z-50 btn-primary text-sm"
-                type="button"
-              >
-                Install App
-              </button>
-            )}
-            <KeyboardShortcutsModal
-              isOpen={shortcutsModalOpen}
-              onClose={handleCloseShortcutsModal}
-            />
-          </div>
+            </div>
+          </PriceProvider>
         </ToastProvider>
-      </PriceProvider>
+      </ThemeProvider>
     </>
   );
 }

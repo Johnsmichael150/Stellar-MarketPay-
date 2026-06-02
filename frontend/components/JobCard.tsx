@@ -109,6 +109,7 @@ function CountdownTimer({ deadline }: { deadline: string }) {
 export default function JobCard({ job, isFocused = false, onFocus }: JobCardProps) {
   const { xlmPriceUsd, currencyMode, priceLoading } = usePriceContext();
   const { isSaved, toggleBookmark } = useBookmarks();
+  const saved = isSaved(job.id);
   const usdEquivalent = formatUSDEquivalent(job.budget, xlmPriceUsd);
   const price = formatPrice(job.budget, xlmPriceUsd, currencyMode);
   const clientRepBadge = getClientReputationBadge(job.clientReputationScore);
@@ -246,9 +247,9 @@ export default function JobCard({ job, isFocused = false, onFocus }: JobCardProp
                 e.stopPropagation();
                 toggleBookmark(job.id);
               }}
-              className="p-1.5 rounded-md transition-all flex items-center justify-center hover:bg-amber-500/10 group/bookmark"
-              title={isSaved(job.id) ? "Remove bookmark" : "Save job"}
-              aria-label={isSaved(job.id) ? "Remove bookmark" : "Save job"}
+              className="p-2 sm:p-1.5 rounded-md transition-all flex items-center justify-center hover:bg-amber-500/10 group/bookmark min-h-[44px] min-w-[44px]"
+              title={saved ? "Remove bookmark" : "Save job"}
+              aria-label={saved ? "Remove bookmark" : "Save job"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
