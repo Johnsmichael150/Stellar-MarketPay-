@@ -112,7 +112,6 @@
 /* ─── Component layer ────────────────────────────────────────────────────── */
 @layer components {
   .card {
-<<<<<<< feat/dark-mode
     background-color: var(--surface);
     border: 1px solid var(--border);
     @apply rounded-2xl p-6;
@@ -126,32 +125,21 @@
   .card-hover:hover {
     border-color: var(--border-hover);
     background-color: var(--surface-2);
-=======
-    @apply bg-[#151208] border border-[rgba(251,191,36,0.12)] rounded-2xl p-6 dark:bg-[#0a0906] dark:border-[rgba(251,191,36,0.08)];
-  }
-
-  .card-hover {
-    @apply card hover:border-[rgba(251,191,36,0.28)] hover:bg-[#1a1509] transition-all duration-200 cursor-pointer dark:hover:bg-[#0e0c07] dark:hover:border-[rgba(251,191,36,0.18)];
->>>>>>> main
   }
 
   .btn-primary {
     @apply bg-market-500 hover:bg-market-400 text-ink-900 font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl
            transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
-           focus:outline-none focus:ring-2 focus:ring-market-400 focus:ring-offset-2
+           focus:outline-none focus:ring-2 focus:ring-market-400 focus:ring-offset-2 focus:ring-offset-ink-900
            min-h-[44px] flex items-center justify-center;
   }
 
   .btn-secondary {
-    border: 1px solid var(--border-hover);
-    color: var(--gold);
-    background-color: var(--gold-dim);
-    @apply font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-market-400 focus:ring-offset-2
+    @apply border border-market-500/30 hover:border-market-500/60 text-market-400
+           font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all duration-200
+           bg-market-500/5 hover:bg-market-500/10
+           focus:outline-none focus:ring-2 focus:ring-market-400 focus:ring-offset-2 focus:ring-offset-ink-900
            min-h-[44px] flex items-center justify-center;
-  }
-  .btn-secondary:hover {
-    border-color: var(--gold);
   }
 
   .btn-ghost {
@@ -165,14 +153,6 @@
   }
 
   .input-field {
-<<<<<<< feat/dark-mode
-    background-color: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    @apply w-full rounded-xl px-3 sm:px-4 py-2.5 sm:py-3
-           focus:outline-none
-           transition-all duration-200 font-body text-sm min-h-[44px];
-=======
     @apply w-full bg-ink-700 border border-[rgba(251,191,36,0.18)] rounded-xl px-4 py-3
            text-amber-100 placeholder-amber-900/50
            focus:outline-none focus:border-market-500/50 focus:ring-1 focus:ring-market-500/30
@@ -194,7 +174,6 @@
 
   .badge-open {
     @apply badge bg-emerald-500/10 text-emerald-400 border-emerald-500/20;
->>>>>>> main
   }
   .input-field::placeholder { color: var(--text-subtle); }
   .input-field:focus {
@@ -218,16 +197,12 @@
   .badge-disputed  { @apply badge bg-indigo-500/10 text-indigo-400 border-indigo-500/20; }
 
   .address-tag {
-<<<<<<< feat/dark-mode
     background-color: var(--surface-2);
     border: 1px solid var(--border);
     color: var(--gold);
     opacity: 0.9;
-    @apply font-mono text-xs px-2.5 py-1 rounded-lg;
-=======
     @apply font-mono text-xs bg-ink-700 text-market-400/80 px-2.5 py-1 rounded-lg border border-market-500/15
            dark:bg-[#0a0906] dark:border-market-500/10;
->>>>>>> main
   }
 
   .section-title { color: var(--text); @apply font-display text-2xl font-bold; }
@@ -246,6 +221,28 @@
     background-clip: text;
   }
 
+  /* Mobile-responsive utilities */
+  .safe-px {
+    @apply px-4 sm:px-6;
+  }
+
+  .safe-py {
+    @apply py-4 sm:py-6;
+  }
+
+  .safe-p {
+    @apply p-4 sm:p-6;
+  }
+
+  /* Prevent text overflow on mobile */
+  .truncate-mobile {
+    @apply truncate sm:break-normal;
+  }
+
+  /* Touch-target size for buttons */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
   html:not(.dark) .text-gradient-gold {
     background: linear-gradient(135deg, #b45309, #d97706, #92400e);
     -webkit-background-clip: text;
@@ -253,12 +250,6 @@
     background-clip: text;
   }
 
-  .safe-px  { @apply px-4 sm:px-6; }
-  .safe-py  { @apply py-4 sm:py-6; }
-  .safe-p   { @apply p-4 sm:p-6; }
-
-  .truncate-mobile { @apply truncate sm:break-normal; }
-  .touch-target    { @apply min-h-[44px] min-w-[44px] flex items-center justify-center; }
 
   .bg-noise {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
@@ -274,8 +265,6 @@
     );
   }
 
-<<<<<<< feat/dark-mode
-=======
   .dark .bg-lines {
     background-image: repeating-linear-gradient(
       0deg,
@@ -287,7 +276,6 @@
   }
 
   /* Onboarding highlight effect */
->>>>>>> main
   .onboarding-highlight {
     position: relative;
     z-index: 40;
@@ -308,10 +296,6 @@
     50%       { opacity: 0.5; transform: scale(1.02); }
   }
 
-<<<<<<< feat/dark-mode
-  .animate-fade-in  { animation: fadeIn 0.3s ease-in-out; }
-  .animate-scale-in { animation: scaleIn 0.3s ease-in-out; }
-=======
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
@@ -323,14 +307,11 @@
   .animate-scale-in {
     animation: scaleIn 0.3s ease-in-out;
   }
->>>>>>> main
 
   @keyframes fadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-<<<<<<< feat/dark-mode
-=======
 
   @keyframes slideUp {
     from {
@@ -343,7 +324,6 @@
     }
   }
 
->>>>>>> main
   @keyframes scaleIn {
     from { opacity: 0; transform: scale(0.95); }
     to   { opacity: 1; transform: scale(1); }
